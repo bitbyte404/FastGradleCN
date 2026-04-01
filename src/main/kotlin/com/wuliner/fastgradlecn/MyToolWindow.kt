@@ -81,15 +81,22 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
     }
 
     private fun buildLog(result: GradleMirrorService.ApplyResult): String {
-        return when {
-            result.error != null -> "Error: ${result.error}"
-            result.noSettingsFile -> "No settings.gradle(.kts) found in project root."
-            result.alreadyApplied -> "CN mirrors already applied. No changes needed."
-            else -> buildList {
-                if (result.settingsModified) add("✓ settings.gradle(.kts): Aliyun mirrors injected")
-                if (result.wrapperModified) add("✓ gradle-wrapper.properties: Tencent mirror + -all distribution")
-                if (isEmpty()) add("No changes needed.")
-            }.joinToString("\n")
+        val lines = mutableListOf<String>()
+        when {
+            result.error != null -> lines += "Error: ${result.error}"
+            result.noSettingsFile -> lines += "No settings.gradle(.kts) found in project root."
+            result.alreadyApplied -> lines += "CN mirrors already applied. No changes needed."
+            else -> {
+                if (result.settingsModified) lines += "✓ settings.gradle(.kts): Aliyun mirrors injected"
+                if (result.wrapperModified) lines += "✓ gradle-wrapper.properties: Tencent mirror + -all distribution"
+                if (!result.settingsModified && !result.wrapperModified) lines += "No changes needed."
+            }
         }
+        if (result.error != null && result.details.isNotEmpty()) {
+            lines += ""
+            lines += "--- diagnostics ---"
+            lines += result.details
+        }
+        return lines.joinToString("\n")
     }
 }

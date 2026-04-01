@@ -1,6 +1,6 @@
 package com.wuliner.fastgradlecn
 
-import com.intellij.openapi.command.WriteCommandAction
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.io.File
@@ -10,31 +10,40 @@ object GradleMirrorService {
     private const val ALIYUN_GRADLE_PLUGIN = "https://maven.aliyun.com/repository/gradle-plugin"
     private const val ALIYUN_PUBLIC = "https://maven.aliyun.com/repository/public"
     private const val ALIYUN_GOOGLE = "https://maven.aliyun.com/repository/google"
-    private const val TENCENT_GRADLE = "https://mirrors.cloud.tencent.com/gradle/"
-    private const val GRADLE_OFFICIAL = "https://services.gradle.org/distributions/"
+    private const val TENCENT_GRADLE = "https\\://mirrors.cloud.tencent.com/gradle/"
+    private const val GRADLE_OFFICIAL = "https\\://services.gradle.org/distributions/"
 
     data class ApplyResult(
         val settingsModified: Boolean = false,
         val wrapperModified: Boolean = false,
         val alreadyApplied: Boolean = false,
         val noSettingsFile: Boolean = false,
-        val error: String? = null
+        val error: String? = null,
+        val details: List<String> = emptyList()
     )
 
     fun checkApplied(project: Project): Boolean {
         val basePath = project.basePath ?: return false
+
         val kts = File(basePath, "settings.gradle.kts")
         val groovy = File(basePath, "settings.gradle")
-        val file = when {
+        val settingsFile = when {
             kts.exists() -> kts
             groovy.exists() -> groovy
             else -> return false
         }
-        return file.readText().contains("maven.aliyun.com")
+        val settingsOk = settingsFile.readText().contains("maven.aliyun.com")
+
+        val wrapper = File(basePath, "gradle/wrapper/gradle-wrapper.properties")
+        val wrapperOk = !wrapper.exists() || !wrapper.readText().contains("services.gradle.org")
+
+        return settingsOk && wrapperOk
     }
 
     fun applyMirrors(project: Project): ApplyResult {
         val basePath = project.basePath ?: return ApplyResult(error = "No project path")
+        val details = mutableListOf<String>()
+        details += "basePath: $basePath"
 
         val settingsKts = File(basePath, "settings.gradle.kts")
         val settingsGroovy = File(basePath, "settings.gradle")
@@ -43,49 +52,60 @@ object GradleMirrorService {
         val (settingsFile, isKts) = when {
             settingsKts.exists() -> settingsKts to true
             settingsGroovy.exists() -> settingsGroovy to false
-            else -> return ApplyResult(noSettingsFile = true)
+            else -> return ApplyResult(noSettingsFile = true, details = details + "No settings file found")
         }
+        details += "settings: ${settingsFile.path}"
 
         val settingsContent = settingsFile.readText()
         val alreadyApplied = settingsContent.contains("maven.aliyun.com")
+        details += "settings has aliyun: $alreadyApplied"
 
         var settingsModified = false
         if (!alreadyApplied) {
             val newContent = injectMirrors(settingsContent, isKts)
             if (newContent != settingsContent) {
-                writeFile(project, settingsFile, newContent)
+                writeFile(settingsFile)  { newContent }
                 settingsModified = true
+                details += "settings: mirrors injected"
             }
         }
 
-        val wrapperModified = modifyWrapperProps(project, wrapperProps)
+        details += "wrapper: ${wrapperProps.path}"
+        details += "wrapper exists: ${wrapperProps.exists()}"
+        val wrapperModified = if (wrapperProps.exists()) {
+            val content = wrapperProps.readText()
+            details += "wrapper has GRADLE_OFFICIAL: ${content.contains(GRADLE_OFFICIAL)}"
+            if (content.contains(GRADLE_OFFICIAL)) {
+                val newContent = content
+                    .replace(GRADLE_OFFICIAL, TENCENT_GRADLE)
+                    .replace(Regex("""(distributionUrl=.+)-bin\.zip"""), "$1-all.zip")
+                writeFile(wrapperProps) { newContent }
+                details += "wrapper: replaced"
+                true
+            } else {
+                details += "wrapper: already uses mirror or no match"
+                false
+            }
+        } else {
+            details += "wrapper: file not found, skipped"
+            false
+        }
 
         return ApplyResult(
             settingsModified = settingsModified,
             wrapperModified = wrapperModified,
-            alreadyApplied = alreadyApplied && !wrapperModified
+            alreadyApplied = alreadyApplied && !wrapperModified,
+            details = details
         )
     }
 
-    private fun modifyWrapperProps(project: Project, file: File): Boolean {
-        if (!file.exists()) return false
-        val content = file.readText()
-        if (!content.contains(GRADLE_OFFICIAL)) return false
-        val newContent = content
-            .replace(GRADLE_OFFICIAL, TENCENT_GRADLE)
-            .replace(Regex("""(distributionUrl=.+)-bin\.zip"""), "$1-all.zip")
-        writeFile(project, file, newContent)
-        return true
-    }
-
-    private fun writeFile(project: Project, file: File, content: String) {
-        val vFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file) ?: run {
-            file.writeText(content, Charsets.UTF_8)
-            return
+    private fun writeFile(file: File, contentProvider: () -> String) {
+        val content = contentProvider()
+        file.writeText(content, Charsets.UTF_8)
+        // Async VFS refresh so the IDE picks up the change
+        ApplicationManager.getApplication().invokeLater {
+            LocalFileSystem.getInstance().refreshAndFindFileByIoFile(file)?.refresh(false, false)
         }
-        WriteCommandAction.runWriteCommandAction(project, "Apply CN Mirrors", null, {
-            vFile.setBinaryContent(content.toByteArray(Charsets.UTF_8))
-        })
     }
 
     private fun injectMirrors(content: String, isKts: Boolean): String {
@@ -107,12 +127,10 @@ object GradleMirrorService {
 
         val sectionBody = content.substring(sectionBrace, sectionEnd + 1)
 
-        // Find "repositories {" (not "repositoriesMode")
         val repoMatch = Regex("""(?<!\w)repositories\s*\{""").find(sectionBody) ?: return content
         val repoBraceRelIdx = repoMatch.value.lastIndexOf('{') + repoMatch.range.first
         val repoBraceAbsIdx = sectionBrace + repoBraceRelIdx
 
-        // Detect indentation from the repositories line
         val lineStart = content.lastIndexOf('\n', repoBraceAbsIdx) + 1
         val indent = content.substring(lineStart, repoBraceAbsIdx).takeWhile { it == ' ' || it == '\t' }
         val mirrorIndent = "$indent    "

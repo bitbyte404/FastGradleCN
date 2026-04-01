@@ -1,7 +1,7 @@
 plugins {
     id("java")
     id("org.jetbrains.kotlin.jvm") version "2.1.20"
-    id("org.jetbrains.intellij.platform") version "2.10.2"
+    id("org.jetbrains.intellij.platform") version "2.13.1"
 }
 
 group = "com.wuliner"
@@ -41,6 +41,11 @@ tasks {
     withType<JavaCompile> {
         sourceCompatibility = "21"
         targetCompatibility = "21"
+    }
+
+    // Disable instrumentation: incompatible with Microsoft JDK (missing Packages dir)
+    instrumentCode {
+        enabled = false
     }
 }
 
