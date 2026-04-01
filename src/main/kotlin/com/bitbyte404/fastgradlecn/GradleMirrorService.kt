@@ -1,4 +1,4 @@
-package com.wuliner.fastgradlecn
+package com.bitbyte404.fastgradlecn
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.project.Project

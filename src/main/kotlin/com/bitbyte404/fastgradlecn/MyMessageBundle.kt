@@ -1,4 +1,4 @@
-package com.wuliner.fastgradlecn
+package com.bitbyte404.fastgradlecn
 
 import com.intellij.DynamicBundle
 import org.jetbrains.annotations.Nls

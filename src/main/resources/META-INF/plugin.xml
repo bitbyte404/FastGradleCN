@@ -33,7 +33,7 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow id="FastGradleCN"
-                    factoryClass="com.wuliner.fastgradlecn.MyToolWindowFactory"
+                    factoryClass="com.bitbyte404.fastgradlecn.MyToolWindowFactory"
                     anchor="right"
                     icon="AllIcons.Toolwindows.ToolWindowPalette"
                     secondary="true"/>
@@ -42,12 +42,12 @@
                            displayType="BALLOON"
                            toolWindowId="FastGradleCN"/>
 
-        <postStartupActivity implementation="com.wuliner.fastgradlecn.GradleProjectListener"/>
+        <postStartupActivity implementation="com.bitbyte404.fastgradlecn.GradleProjectListener"/>
     </extensions>
 
     <actions>
-        <action id="com.wuliner.fastgradlecn.ApplyMirrorsAction"
-                class="com.wuliner.fastgradlecn.ApplyMirrorsAction"
+        <action id="com.bitbyte404.fastgradlecn.ApplyMirrorsAction"
+                class="com.bitbyte404.fastgradlecn.ApplyMirrorsAction"
                 icon="AllIcons.Actions.Download">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
