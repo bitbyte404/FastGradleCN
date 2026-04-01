@@ -1,117 +1,70 @@
-# IntelliJ Platform Plugin Template
+# FastGradleCN
 
-[![Twitter Follow](https://img.shields.io/badge/follow-%40JBPlatform-1DA1F2?logo=twitter)](https://twitter.com/JBPlatform)
-[![Developers Forum](https://img.shields.io/badge/JetBrains%20Platform-Join-blue)][jb:forum]
+Auto-configure Aliyun + Tencent CN mirrors for Gradle projects in Android Studio / IntelliJ IDEA.
+为 Android Studio / IntelliJ IDEA 的 Gradle 项目自动配置阿里云 + 腾讯云国内镜像，解决在中国大陆下载依赖缓慢的问题。
 
-## Plugin template structure
+---
 
-A generated project contains the following content structure:
+## 功能 / Features
 
+- **自动检测**：打开项目时检测是否缺少国内镜像，提示一键配置
+- **注入阿里云镜像**：向 `settings.gradle(.kts)` 的 `pluginManagement.repositories` 和 `dependencyResolutionManagement.repositories` 注入阿里云仓库
+- **替换 Gradle 下载地址**：将 `gradle-wrapper.properties` 的 `distributionUrl` 替换为腾讯云镜像，并自动切换为 `-all` 发行版
+- **全局 init script**：一次安装，所有新建项目自动生效，彻底解决时序竞争问题
+- **双语界面**：支持中文和英文，跟随 IDE 语言自动切换
+- **兼容性强**：支持 Kotlin DSL（`.kts`）和 Groovy DSL，兼容 Android Studio Hedgehog (2023.1.1) 及以上版本
+
+---
+
+## 使用方式 / Usage
+
+### 方式一：自动提示（推荐）
+
+打开 Gradle 项目后，若未配置国内镜像，插件会自动弹出通知：
+
+- **Apply to This Project** — 修改当前项目的 `settings.gradle(.kts)` 和 `gradle-wrapper.properties`
+- **Install Global Init Script** — 安装 `~/.gradle/init.d/cn-mirrors.init.gradle`，所有项目永久生效
+
+### 方式二：Tool Window
+
+侧边栏打开 **FastGradleCN** 面板，手动点击应用或管理全局脚本。
+
+### 方式三：菜单
+
+**Tools → 配置国内 Gradle 镜像 / Apply CN Gradle Mirrors**
+
+---
+
+## 镜像说明 / Mirrors
+
+| 用途 | 镜像 |
+|------|------|
+| Maven 依赖 / 插件 | [阿里云 maven.aliyun.com](https://maven.aliyun.com) |
+| Gradle 二进制下载 | [腾讯云 mirrors.cloud.tencent.com](https://mirrors.cloud.tencent.com/gradle/) |
+
+---
+
+## 安装 / Installation
+
+**Plugin Marketplace（推荐）**
+
+Android Studio / IntelliJ IDEA → Settings → Plugins → 搜索 `FastGradleCN`
+
+**手动安装**
+
+1. 前往 [Releases](../../releases) 下载最新 `.zip`
+2. Settings → Plugins → ⚙️ → Install Plugin from Disk
+
+---
+
+## 发布 / Publish
+
+```bash
+JETBRAINS_TOKEN=your_token ./gradlew publishPlugin
 ```
-.
-├── .run/                   Predefined Run/Debug Configurations
-├── build/                  Output build directory
-├── gradle
-│   ├── wrapper/            Gradle Wrapper
-├── src                     Plugin sources
-│   ├── main
-│   │   ├── kotlin/         Kotlin production sources
-│   │   └── resources/      Resources - plugin.xml, icons, messages
-├── .gitignore              Git ignoring rules
-├── build.gradle.kts        Gradle build configuration
-├── gradle.properties       Gradle configuration properties
-├── gradlew                 *nix Gradle Wrapper script
-├── gradlew.bat             Windows Gradle Wrapper script
-├── README.md               README
-└── settings.gradle.kts     Gradle project settings
-```
 
-In addition to the configuration files, the most crucial part is the `src` directory, which contains our implementation
-and the manifest for our plugin – [plugin.xml][file:plugin.xml].
+---
 
-> [!NOTE]
-> To use Java in your plugin, create the `/src/main/java` directory.
+## License
 
-## Plugin configuration file
-
-The plugin configuration file is a [plugin.xml][file:plugin.xml] file located in the `src/main/resources/META-INF`
-directory.
-It provides general information about the plugin, its dependencies, extensions, and listeners.
-
-You can read more about this file in the [Plugin Configuration File][docs:plugin.xml] section of our documentation.
-
-If you're still not quite sure what this is all about, read our
-introduction: [What is the IntelliJ Platform?][docs:intro]
-
-$H$H Predefined Run/Debug configurations
-
-Within the default project structure, there is a `.run` directory provided containing predefined *Run/Debug
-configurations* that expose corresponding Gradle tasks:
-
-| Configuration name | Description                                                                                                                                                                         |
-|--------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| Run Plugin         | Runs [`:runIde`][gh:intellij-platform-gradle-plugin-runIde] IntelliJ Platform Gradle Plugin task. Use the *Debug* icon for plugin debugging.                                        |
-| Run Tests          | Runs [`:test`][gradle:lifecycle-tasks] Gradle task.                                                                                                                                 |
-| Run Verifications  | Runs [`:verifyPlugin`][gh:intellij-platform-gradle-plugin-verifyPlugin] IntelliJ Platform Gradle Plugin task to check the plugin compatibility against the specified IntelliJ IDEs. |
-
-> [!NOTE]
-> You can find the logs from the running task in the `idea.log` tab.
-
-## Publishing the plugin
-
-> [!TIP]
-> Make sure to follow all guidelines listed in [Publishing a Plugin][docs:publishing] to follow all recommended and
-> required steps.
-
-Releasing a plugin to [JetBrains Marketplace](https://plugins.jetbrains.com) is a straightforward operation that uses
-the `publishPlugin` Gradle task provided by
-the [intellij-platform-gradle-plugin][gh:intellij-platform-gradle-plugin-docs].
-
-You can also upload the plugin to the [JetBrains Plugin Repository](https://plugins.jetbrains.com/plugin/upload)
-manually via UI.
-
-## Useful links
-
-- [IntelliJ Platform SDK Plugin SDK][docs]
-- [IntelliJ Platform Gradle Plugin Documentation][gh:intellij-platform-gradle-plugin-docs]
-- [IntelliJ Platform Explorer][jb:ipe]
-- [JetBrains Marketplace Quality Guidelines][jb:quality-guidelines]
-- [IntelliJ Platform UI Guidelines][jb:ui-guidelines]
-- [JetBrains Marketplace Paid Plugins][jb:paid-plugins]
-- [IntelliJ SDK Code Samples][gh:code-samples]
-
-[docs]: https://plugins.jetbrains.com/docs/intellij
-
-[docs:intro]: https://plugins.jetbrains.com/docs/intellij/intellij-platform.html?from=IJPluginTemplate
-
-[docs:plugin.xml]: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html?from=IJPluginTemplate
-
-[docs:publishing]: https://plugins.jetbrains.com/docs/intellij/publishing-plugin.html?from=IJPluginTemplate
-
-[file:plugin.xml]: ./src/main/resources/META-INF/plugin.xml
-
-[gh:code-samples]: https://github.com/JetBrains/intellij-sdk-code-samples
-
-[gh:intellij-platform-gradle-plugin]: https://github.com/JetBrains/intellij-platform-gradle-plugin
-
-[gh:intellij-platform-gradle-plugin-docs]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
-
-[gh:intellij-platform-gradle-plugin-runIde]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html#runIde
-
-[gh:intellij-platform-gradle-plugin-verifyPlugin]: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-tasks.html#verifyPlugin
-
-[gradle:lifecycle-tasks]: https://docs.gradle.org/current/userguide/java_plugin.html#lifecycle_tasks
-
-[jb:github]: https://github.com/JetBrains/.github/blob/main/profile/README.md
-
-[jb:forum]: https://platform.jetbrains.com/
-
-[jb:quality-guidelines]: https://plugins.jetbrains.com/docs/marketplace/quality-guidelines.html
-
-[jb:paid-plugins]: https://plugins.jetbrains.com/docs/marketplace/paid-plugins-marketplace.html
-
-[jb:quality-guidelines]: https://plugins.jetbrains.com/docs/marketplace/quality-guidelines.html
-
-[jb:ipe]: https://jb.gg/ipe
-
-[jb:ui-guidelines]: https://jetbrains.github.io/ui
+[Apache 2.0](LICENSE)
