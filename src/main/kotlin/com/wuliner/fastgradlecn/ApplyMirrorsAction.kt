@@ -5,11 +5,12 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
+import javax.swing.Icon
 
 class ApplyMirrorsAction : AnAction(
     MyMessageBundle.lazyMessage("action.apply.text"),
     MyMessageBundle.lazyMessage("action.apply.description"),
-    null
+    null as Icon?
 ) {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return

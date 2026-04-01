@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.13.1"
 }
 
-group = "com.wuliner"
-version = "1.0-SNAPSHOT"
+group = "com.bitbyte404"
+version = "1.0.0"
 
 repositories {
     maven { setUrl("https://maven.aliyun.com/repository/public") }
@@ -31,8 +31,19 @@ intellijPlatform {
         }
 
         changeNotes = """
-            Initial version
+            <ul>
+                <li>自动检测项目缺少国内镜像并提示配置</li>
+                <li>向 settings.gradle(.kts) 注入阿里云镜像（pluginManagement + dependencyResolutionManagement）</li>
+                <li>将 gradle-wrapper.properties 的下载地址替换为腾讯云镜像</li>
+                <li>支持安装全局 init script，新建任何项目自动生效</li>
+                <li>支持 Kotlin DSL 和 Groovy DSL</li>
+                <li>支持中英文界面</li>
+            </ul>
         """.trimIndent()
+
+        publishing {
+            token = providers.environmentVariable("JETBRAINS_TOKEN")
+        }
     }
 }
 
