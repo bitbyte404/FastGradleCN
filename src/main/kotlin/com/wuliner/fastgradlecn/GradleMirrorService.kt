@@ -32,12 +32,25 @@ object GradleMirrorService {
             groovy.exists() -> groovy
             else -> return false
         }
-        val settingsOk = settingsFile.readText().contains("maven.aliyun.com")
+        val content = settingsFile.readText()
+        // Each section must have aliyun mirrors (if the section exists at all)
+        val settingsOk = sectionHasAliyun(content, "pluginManagement") &&
+                         sectionHasAliyun(content, "dependencyResolutionManagement")
 
         val wrapper = File(basePath, "gradle/wrapper/gradle-wrapper.properties")
         val wrapperOk = !wrapper.exists() || !wrapper.readText().contains("services.gradle.org")
 
         return settingsOk && wrapperOk
+    }
+
+    private fun sectionHasAliyun(content: String, section: String): Boolean {
+        val sectionIdx = content.indexOf(section)
+        if (sectionIdx == -1) return true  // section doesn't exist, nothing to do
+        val sectionBrace = content.indexOf('{', sectionIdx)
+        if (sectionBrace == -1) return true
+        val sectionEnd = findBlockEnd(content, sectionBrace)
+        if (sectionEnd == -1) return true
+        return content.substring(sectionBrace, sectionEnd + 1).contains("maven.aliyun.com")
     }
 
     fun applyMirrors(project: Project): ApplyResult {
@@ -57,18 +70,19 @@ object GradleMirrorService {
         details += "settings: ${settingsFile.path}"
 
         val settingsContent = settingsFile.readText()
-        val alreadyApplied = settingsContent.contains("maven.aliyun.com")
-        details += "settings has aliyun: $alreadyApplied"
 
+        // Always try injection — injectIntoSection skips sections that already have mirrors
         var settingsModified = false
-        if (!alreadyApplied) {
-            val newContent = injectMirrors(settingsContent, isKts)
-            if (newContent != settingsContent) {
-                writeFile(settingsFile)  { newContent }
-                settingsModified = true
-                details += "settings: mirrors injected"
-            }
+        val newSettingsContent = injectMirrors(settingsContent, isKts)
+        if (newSettingsContent != settingsContent) {
+            writeFile(settingsFile) { newSettingsContent }
+            settingsModified = true
+            details += "settings: mirrors injected"
+        } else {
+            details += "settings: already fully configured"
         }
+
+        val alreadyApplied = !settingsModified
 
         details += "wrapper: ${wrapperProps.path}"
         details += "wrapper exists: ${wrapperProps.exists()}"
@@ -79,6 +93,7 @@ object GradleMirrorService {
                 val newContent = content
                     .replace(GRADLE_OFFICIAL, TENCENT_GRADLE)
                     .replace(Regex("""(distributionUrl=.+)-bin\.zip"""), "$1-all.zip")
+                    .replace(Regex("""distributionSha256Sum=.*(\r?\n)?"""), "")
                 writeFile(wrapperProps) { newContent }
                 details += "wrapper: replaced"
                 true
@@ -126,6 +141,9 @@ object GradleMirrorService {
         if (sectionEnd == -1) return content
 
         val sectionBody = content.substring(sectionBrace, sectionEnd + 1)
+
+        // Skip if this section already has mirrors
+        if (sectionBody.contains("maven.aliyun.com")) return content
 
         val repoMatch = Regex("""(?<!\w)repositories\s*\{""").find(sectionBody) ?: return content
         val repoBraceRelIdx = repoMatch.value.lastIndexOf('{') + repoMatch.range.first
