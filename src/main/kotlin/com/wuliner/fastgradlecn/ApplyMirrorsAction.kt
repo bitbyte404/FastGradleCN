@@ -6,8 +6,11 @@ import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.project.Project
 
-class ApplyMirrorsAction : AnAction("Apply CN Gradle Mirrors") {
-
+class ApplyMirrorsAction : AnAction(
+    MyMessageBundle.lazyMessage("action.apply.text"),
+    MyMessageBundle.lazyMessage("action.apply.description"),
+    null
+) {
     override fun actionPerformed(e: AnActionEvent) {
         val project = e.project ?: return
         applyAndNotify(project)
@@ -19,22 +22,23 @@ class ApplyMirrorsAction : AnAction("Apply CN Gradle Mirrors") {
 
     companion object {
         fun applyAndNotify(project: Project) {
+            val msg = MyMessageBundle
             val result = GradleMirrorService.applyMirrors(project)
             val (message, type) = when {
                 result.error != null ->
                     "Error: ${result.error}" to NotificationType.ERROR
 
                 result.noSettingsFile ->
-                    "No settings.gradle(.kts) found in project root." to NotificationType.WARNING
+                    msg.message("log.no.settings.file") to NotificationType.WARNING
 
                 result.alreadyApplied ->
-                    "CN mirrors already applied. No changes needed." to NotificationType.INFORMATION
+                    msg.message("log.already.applied") to NotificationType.INFORMATION
 
                 else -> {
                     val parts = mutableListOf<String>()
-                    if (result.settingsModified) parts += "✓ Aliyun mirrors added to settings.gradle(.kts)"
-                    if (result.wrapperModified) parts += "✓ gradle-wrapper.properties: Tencent mirror + switched to -all distribution"
-                    (if (parts.isEmpty()) "No changes needed." else parts.joinToString("\n")) to
+                    if (result.settingsModified) parts += msg.message("log.settings.injected")
+                    if (result.wrapperModified) parts += msg.message("log.wrapper.replaced")
+                    (if (parts.isEmpty()) msg.message("log.no.changes") else parts.joinToString("\n")) to
                             NotificationType.INFORMATION
                 }
             }

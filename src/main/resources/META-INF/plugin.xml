@@ -5,20 +5,26 @@
     <vendor url="https://github.com/wuliner">wuliner</vendor>
 
     <description><![CDATA[
-        Automatically apply Chinese mirror repositories to Gradle projects for
-        faster dependency downloads in mainland China.<br><br>
-        <b>Features:</b><br>
+        <p>为 Gradle 项目自动配置国内镜像，解决在中国大陆下载依赖缓慢的问题。</p>
+        <p>Automatically configure CN mirror repositories for Gradle projects to speed up dependency downloads in mainland China.</p>
+        <br>
+        <b>功能 / Features</b>
         <ul>
-            <li>Auto-detects missing mirrors on project open and prompts to apply</li>
-            <li>Injects Aliyun mirrors into <code>settings.gradle(.kts)</code> —
-                both <code>pluginManagement.repositories</code> and
-                <code>dependencyResolutionManagement.repositories</code></li>
-            <li>Replaces Gradle distribution URL in <code>gradle-wrapper.properties</code>
-                with Tencent mirror</li>
-            <li>Supports both Kotlin DSL (<code>.kts</code>) and Groovy DSL</li>
+            <li>打开项目时自动检测并提示配置镜像 / Auto-detects missing mirrors on project open</li>
+            <li>向 <code>settings.gradle(.kts)</code> 的 <code>pluginManagement</code> 和
+                <code>dependencyResolutionManagement</code> 注入阿里云镜像 /
+                Injects Aliyun mirrors into both repository blocks</li>
+            <li>将 <code>gradle-wrapper.properties</code> 的 Gradle 下载地址替换为腾讯镜像 /
+                Replaces Gradle distribution URL with Tencent mirror</li>
+            <li>安装全局 init script，新建任何项目都自动生效，无需重复配置 /
+                Install a global init script to apply mirrors to all future projects automatically</li>
+            <li>同时支持 Kotlin DSL（<code>.kts</code>）和 Groovy DSL /
+                Supports both Kotlin DSL and Groovy DSL</li>
         </ul>
-        <b>Usage:</b> Open a Gradle project and click "Apply Mirrors" in the
-        notification, the FastGradleCN tool window, or via <i>Tools → Apply CN Gradle Mirrors</i>.
+        <b>使用方式 / Usage</b>
+        <p>打开 Gradle 项目后，在通知栏、FastGradleCN 工具窗口或 <i>Tools → 配置国内 Gradle 镜像</i> 中点击应用。<br>
+        Open a Gradle project and click Apply in the notification, the FastGradleCN tool window,
+        or via <i>Tools → Apply CN Gradle Mirrors</i>.</p>
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -42,8 +48,7 @@
     <actions>
         <action id="com.wuliner.fastgradlecn.ApplyMirrorsAction"
                 class="com.wuliner.fastgradlecn.ApplyMirrorsAction"
-                text="Apply CN Gradle Mirrors"
-                description="Inject Aliyun + Tencent mirrors into Gradle settings and wrapper">
+                icon="AllIcons.Actions.Download">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

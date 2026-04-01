@@ -24,7 +24,6 @@ class GradleProjectListener : StartupActivity.DumbAware {
             // Immediately and silently fix the wrapper URL before sync starts
             silentlyFixWrapper(basePath)
 
-            // Show notification only if settings still need CN mirrors
             if (!GradleMirrorService.checkApplied(project)) {
                 ApplicationManager.getApplication().invokeLater {
                     showSuggestionNotification(project)
@@ -42,26 +41,27 @@ class GradleProjectListener : StartupActivity.DumbAware {
         val newContent = content
             .replace("https\\://services.gradle.org/distributions/", "https\\://mirrors.cloud.tencent.com/gradle/")
             .replace(Regex("""(distributionUrl=.+)-bin\.zip"""), "$1-all.zip")
+            .replace(Regex("""distributionSha256Sum=.*(\r?\n)?"""), "")
         wrapperFile.writeText(newContent, Charsets.UTF_8)
 
-        // Refresh VFS on EDT
         ApplicationManager.getApplication().invokeLater {
             LocalFileSystem.getInstance().refreshAndFindFileByIoFile(wrapperFile)?.refresh(false, false)
         }
     }
 
     private fun showSuggestionNotification(project: Project) {
+        val msg = MyMessageBundle
         val needInitScript = !GradleInitScriptService.isInstalled()
-        val message = if (needInitScript) {
-            "CN mirrors not detected. Tip: setup global init script to auto-apply on every new project."
-        } else {
-            "CN mirrors not detected in this project's settings.gradle(.kts)."
-        }
 
         val notification = NotificationGroupManager.getInstance()
             .getNotificationGroup("FastGradleCN.Notification")
-            .createNotification("FastGradleCN", message, NotificationType.INFORMATION)
-            .addAction(object : NotificationAction("Apply to This Project") {
+            .createNotification(
+                "FastGradleCN",
+                if (needInitScript) msg.message("notification.missing.with.hint")
+                else msg.message("notification.missing"),
+                NotificationType.INFORMATION
+            )
+            .addAction(object : NotificationAction(msg.message("notification.action.apply")) {
                 override fun actionPerformed(e: AnActionEvent, notification: Notification) {
                     notification.expire()
                     ApplyMirrorsAction.applyAndNotify(project)
@@ -69,18 +69,18 @@ class GradleProjectListener : StartupActivity.DumbAware {
             })
 
         if (needInitScript) {
-            notification.addAction(object : NotificationAction("Setup Global Init Script") {
+            notification.addAction(object : NotificationAction(msg.message("notification.action.init")) {
                 override fun actionPerformed(e: AnActionEvent, notification: Notification) {
                     notification.expire()
                     val result = GradleInitScriptService.install()
-                    val msg = if (result.isSuccess)
-                        "✓ Init script installed: ${GradleInitScriptService.initFilePath()}\nAll future Gradle projects will use CN mirrors automatically."
+                    val message = if (result.isSuccess)
+                        msg.message("log.init.installed", GradleInitScriptService.initFilePath())
                     else
-                        "Failed to install: ${result.exceptionOrNull()?.message}"
+                        msg.message("log.init.install.failed", result.exceptionOrNull()?.message ?: "")
                     val type = if (result.isSuccess) NotificationType.INFORMATION else NotificationType.ERROR
                     NotificationGroupManager.getInstance()
                         .getNotificationGroup("FastGradleCN.Notification")
-                        .createNotification("FastGradleCN", msg, type)
+                        .createNotification("FastGradleCN", message, type)
                         .notify(project)
                 }
             })

@@ -29,6 +29,8 @@ class MyToolWindowFactory : ToolWindowFactory {
 
 class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWindowPanel>(BorderLayout()) {
 
+    private val msg get() = MyMessageBundle
+
     private val projectStatusLabel = JBLabel()
     private val initScriptStatusLabel = JBLabel()
     private val initScriptButton = JButton()
@@ -45,19 +47,17 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
         val topPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-            // Project mirrors status
             add(projectStatusLabel)
             add(Box.createVerticalStrut(4))
             val projectButtons = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
-                add(JButton("Apply to Project").apply { addActionListener { onApply() } })
+                add(JButton(msg.message("button.apply.project")).apply { addActionListener { onApply() } })
                 add(Box.createHorizontalStrut(8))
-                add(JButton("Refresh").apply { addActionListener { refreshStatus() } })
+                add(JButton(msg.message("button.refresh")).apply { addActionListener { refreshStatus() } })
             }
             add(projectButtons)
 
             add(Box.createVerticalStrut(12))
 
-            // Global init script status
             add(initScriptStatusLabel)
             add(Box.createVerticalStrut(4))
             val initButtons = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
@@ -74,18 +74,20 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
     }
 
     private fun refreshStatus() {
-        val applied = GradleMirrorService.checkApplied(project)
-        projectStatusLabel.text = if (applied)
-            "Project: ✓ CN mirrors applied"
+        projectStatusLabel.text = if (GradleMirrorService.checkApplied(project))
+            msg.message("status.project.applied")
         else
-            "Project: ✗ CN mirrors not detected"
+            msg.message("status.project.not.applied")
 
         val initInstalled = GradleInitScriptService.isInstalled()
         initScriptStatusLabel.text = if (initInstalled)
-            "Global init script: ✓ Installed (auto-applies to all projects)"
+            msg.message("status.init.installed")
         else
-            "Global init script: ✗ Not installed"
-        initScriptButton.text = if (initInstalled) "Remove Init Script" else "Install Init Script (Recommended)"
+            msg.message("status.init.not.installed")
+        initScriptButton.text = if (initInstalled)
+            msg.message("button.init.remove")
+        else
+            msg.message("button.init.install")
     }
 
     private fun onApply() {
@@ -98,17 +100,15 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
         if (GradleInitScriptService.isInstalled()) {
             val result = GradleInitScriptService.uninstall()
             logArea.text = if (result.isSuccess)
-                "Global init script removed."
+                msg.message("log.init.removed")
             else
-                "Failed to remove: ${result.exceptionOrNull()?.message}"
+                msg.message("log.init.remove.failed", result.exceptionOrNull()?.message ?: "")
         } else {
             val result = GradleInitScriptService.install()
             logArea.text = if (result.isSuccess)
-                "✓ Global init script installed:\n${GradleInitScriptService.initFilePath()}\n\n" +
-                "Aliyun mirrors will be applied automatically to every Gradle build.\n" +
-                "No more manual mirror setup for new projects."
+                msg.message("log.init.installed", GradleInitScriptService.initFilePath())
             else
-                "Failed to install: ${result.exceptionOrNull()?.message}"
+                msg.message("log.init.install.failed", result.exceptionOrNull()?.message ?: "")
         }
         refreshStatus()
     }
@@ -117,12 +117,12 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
         val lines = mutableListOf<String>()
         when {
             result.error != null -> lines += "Error: ${result.error}"
-            result.noSettingsFile -> lines += "No settings.gradle(.kts) found in project root."
-            result.alreadyApplied -> lines += "CN mirrors already applied. No changes needed."
+            result.noSettingsFile -> lines += msg.message("log.no.settings.file")
+            result.alreadyApplied -> lines += msg.message("log.already.applied")
             else -> {
-                if (result.settingsModified) lines += "✓ settings.gradle(.kts): Aliyun mirrors injected"
-                if (result.wrapperModified) lines += "✓ gradle-wrapper.properties: Tencent mirror + -all distribution"
-                if (!result.settingsModified && !result.wrapperModified) lines += "No changes needed."
+                if (result.settingsModified) lines += msg.message("log.settings.injected")
+                if (result.wrapperModified) lines += msg.message("log.wrapper.replaced")
+                if (!result.settingsModified && !result.wrapperModified) lines += msg.message("log.no.changes")
             }
         }
         if (result.error != null && result.details.isNotEmpty()) {
