@@ -35,7 +35,7 @@
         <toolWindow id="FastGradleCN"
                     factoryClass="com.bitbyte404.fastgradlecn.MyToolWindowFactory"
                     anchor="right"
-                    icon="AllIcons.Toolwindows.ToolWindowPalette"
+                    icon="/META-INF/pluginIcon.svg"
                     secondary="true"/>
 
         <notificationGroup id="FastGradleCN.Notification"
