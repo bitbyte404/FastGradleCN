@@ -16,8 +16,6 @@
                 Injects Aliyun mirrors into both repository blocks</li>
             <li>将 <code>gradle-wrapper.properties</code> 的 Gradle 下载地址替换为腾讯镜像 /
                 Replaces Gradle distribution URL with Tencent mirror</li>
-            <li>安装全局 init script，新建任何项目都自动生效，无需重复配置 /
-                Install a global init script to apply mirrors to all future projects automatically</li>
             <li>同时支持 Kotlin DSL（<code>.kts</code>）和 Groovy DSL /
                 Supports both Kotlin DSL and Groovy DSL</li>
         </ul>

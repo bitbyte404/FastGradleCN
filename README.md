@@ -10,7 +10,6 @@ Auto-configure Aliyun + Tencent CN mirrors for Gradle projects in Android Studio
 - **自动检测**：打开项目时检测是否缺少国内镜像，提示一键配置
 - **注入阿里云镜像**：向 `settings.gradle(.kts)` 的 `pluginManagement.repositories` 和 `dependencyResolutionManagement.repositories` 注入阿里云仓库
 - **替换 Gradle 下载地址**：将 `gradle-wrapper.properties` 的 `distributionUrl` 替换为腾讯云镜像，并自动切换为 `-all` 发行版
-- **全局 init script**：一次安装，所有新建项目自动生效，彻底解决时序竞争问题
 - **双语界面**：支持中文和英文，跟随 IDE 语言自动切换
 - **兼容性强**：支持 Kotlin DSL（`.kts`）和 Groovy DSL，兼容 Android Studio Hedgehog (2023.1.1) 及以上版本
 
@@ -20,14 +19,11 @@ Auto-configure Aliyun + Tencent CN mirrors for Gradle projects in Android Studio
 
 ### 方式一：自动提示（推荐）
 
-打开 Gradle 项目后，若未配置国内镜像，插件会自动弹出通知：
-
-- **Apply to This Project** — 修改当前项目的 `settings.gradle(.kts)` 和 `gradle-wrapper.properties`
-- **Install Global Init Script** — 安装 `~/.gradle/init.d/cn-mirrors.init.gradle`，所有项目永久生效
+打开 Gradle 项目后，若未配置国内镜像，插件会自动弹出通知，点击 **Apply Mirrors** 一键配置。
 
 ### 方式二：Tool Window
 
-侧边栏打开 **FastGradleCN** 面板，手动点击应用或管理全局脚本。
+侧边栏打开 **FastGradleCN** 面板，手动点击应用。
 
 ### 方式三：菜单
 
