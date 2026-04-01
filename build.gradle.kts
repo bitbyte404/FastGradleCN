@@ -40,10 +40,10 @@ intellijPlatform {
                 <li>支持中英文界面</li>
             </ul>
         """.trimIndent()
+    }
 
-        publishing {
-            token = providers.environmentVariable("JETBRAINS_TOKEN")
-        }
+    publishing {
+        token = providers.environmentVariable("JETBRAINS_TOKEN")
     }
 }
 
