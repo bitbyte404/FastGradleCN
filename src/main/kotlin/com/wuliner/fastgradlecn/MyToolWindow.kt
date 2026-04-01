@@ -29,7 +29,9 @@ class MyToolWindowFactory : ToolWindowFactory {
 
 class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWindowPanel>(BorderLayout()) {
 
-    private val statusLabel = JBLabel()
+    private val projectStatusLabel = JBLabel()
+    private val initScriptStatusLabel = JBLabel()
+    private val initScriptButton = JButton()
     private val logArea = JBTextArea(8, 40).apply {
         isEditable = false
         lineWrap = true
@@ -40,22 +42,28 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
     init {
         border = JBUI.Borders.empty(10)
 
-        // Top section: status + buttons
         val topPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
 
-            add(statusLabel)
-            add(Box.createVerticalStrut(8))
+            // Project mirrors status
+            add(projectStatusLabel)
+            add(Box.createVerticalStrut(4))
+            val projectButtons = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
+                add(JButton("Apply to Project").apply { addActionListener { onApply() } })
+                add(Box.createHorizontalStrut(8))
+                add(JButton("Refresh").apply { addActionListener { refreshStatus() } })
+            }
+            add(projectButtons)
 
-            val buttonPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
-            buttonPanel.add(JButton("Apply CN Mirrors").apply {
-                addActionListener { onApply() }
-            })
-            buttonPanel.add(Box.createHorizontalStrut(8))
-            buttonPanel.add(JButton("Refresh Status").apply {
-                addActionListener { refreshStatus() }
-            })
-            add(buttonPanel)
+            add(Box.createVerticalStrut(12))
+
+            // Global init script status
+            add(initScriptStatusLabel)
+            add(Box.createVerticalStrut(4))
+            val initButtons = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
+                add(initScriptButton.apply { addActionListener { onToggleInitScript() } })
+            }
+            add(initButtons)
             add(Box.createVerticalStrut(8))
         }
 
@@ -67,16 +75,41 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
 
     private fun refreshStatus() {
         val applied = GradleMirrorService.checkApplied(project)
-        if (applied) {
-            statusLabel.text = "Status: ✓ CN mirrors already applied"
-        } else {
-            statusLabel.text = "Status: ✗ CN mirrors not detected"
-        }
+        projectStatusLabel.text = if (applied)
+            "Project: ✓ CN mirrors applied"
+        else
+            "Project: ✗ CN mirrors not detected"
+
+        val initInstalled = GradleInitScriptService.isInstalled()
+        initScriptStatusLabel.text = if (initInstalled)
+            "Global init script: ✓ Installed (auto-applies to all projects)"
+        else
+            "Global init script: ✗ Not installed"
+        initScriptButton.text = if (initInstalled) "Remove Init Script" else "Install Init Script (Recommended)"
     }
 
     private fun onApply() {
         val result = GradleMirrorService.applyMirrors(project)
         logArea.text = buildLog(result)
+        refreshStatus()
+    }
+
+    private fun onToggleInitScript() {
+        if (GradleInitScriptService.isInstalled()) {
+            val result = GradleInitScriptService.uninstall()
+            logArea.text = if (result.isSuccess)
+                "Global init script removed."
+            else
+                "Failed to remove: ${result.exceptionOrNull()?.message}"
+        } else {
+            val result = GradleInitScriptService.install()
+            logArea.text = if (result.isSuccess)
+                "✓ Global init script installed:\n${GradleInitScriptService.initFilePath()}\n\n" +
+                "Aliyun mirrors will be applied automatically to every Gradle build.\n" +
+                "No more manual mirror setup for new projects."
+            else
+                "Failed to install: ${result.exceptionOrNull()?.message}"
+        }
         refreshStatus()
     }
 
