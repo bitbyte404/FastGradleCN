@@ -37,19 +37,6 @@ settingsEvaluated { settings ->
     } catch (Exception ignored) {}
 }
 
-// Legacy projects: allprojects repositories
-allprojects {
-    buildscript.repositories {
-        cnMirrors.each { mirror ->
-            maven { url mirror }
-        }
-    }
-    repositories {
-        cnMirrors.each { mirror ->
-            maven { url mirror }
-        }
-    }
-}
 """.trimIndent()
 
     fun isInstalled(): Boolean = initFile.exists()
