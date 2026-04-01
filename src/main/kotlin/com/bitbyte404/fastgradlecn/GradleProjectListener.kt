@@ -21,7 +21,6 @@ class GradleProjectListener : StartupActivity.DumbAware {
             } ?: false
             if (!isGradleProject) return@executeOnPooledThread
 
-            // Immediately and silently fix the wrapper URL before sync starts
             silentlyFixWrapper(basePath)
 
             if (!GradleMirrorService.checkApplied(project)) {
@@ -51,41 +50,15 @@ class GradleProjectListener : StartupActivity.DumbAware {
 
     private fun showSuggestionNotification(project: Project) {
         val msg = MyMessageBundle
-        val needInitScript = !GradleInitScriptService.isInstalled()
-
-        val notification = NotificationGroupManager.getInstance()
+        NotificationGroupManager.getInstance()
             .getNotificationGroup("FastGradleCN.Notification")
-            .createNotification(
-                "FastGradleCN",
-                if (needInitScript) msg.message("notification.missing.with.hint")
-                else msg.message("notification.missing"),
-                NotificationType.INFORMATION
-            )
+            .createNotification("FastGradleCN", msg.message("notification.missing"), NotificationType.INFORMATION)
             .addAction(object : NotificationAction(msg.message("notification.action.apply")) {
                 override fun actionPerformed(e: AnActionEvent, notification: Notification) {
                     notification.expire()
                     ApplyMirrorsAction.applyAndNotify(project)
                 }
             })
-
-        if (needInitScript) {
-            notification.addAction(object : NotificationAction(msg.message("notification.action.init")) {
-                override fun actionPerformed(e: AnActionEvent, notification: Notification) {
-                    notification.expire()
-                    val result = GradleInitScriptService.install()
-                    val message = if (result.isSuccess)
-                        msg.message("log.init.installed", GradleInitScriptService.initFilePath())
-                    else
-                        msg.message("log.init.install.failed", result.exceptionOrNull()?.message ?: "")
-                    val type = if (result.isSuccess) NotificationType.INFORMATION else NotificationType.ERROR
-                    NotificationGroupManager.getInstance()
-                        .getNotificationGroup("FastGradleCN.Notification")
-                        .createNotification("FastGradleCN", message, type)
-                        .notify(project)
-                }
-            })
-        }
-
-        notification.notify(project)
+            .notify(project)
     }
 }

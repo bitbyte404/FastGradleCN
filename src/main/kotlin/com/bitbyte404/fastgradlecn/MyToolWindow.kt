@@ -30,10 +30,7 @@ class MyToolWindowFactory : ToolWindowFactory {
 class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWindowPanel>(BorderLayout()) {
 
     private val msg get() = MyMessageBundle
-
-    private val projectStatusLabel = JBLabel()
-    private val initScriptStatusLabel = JBLabel()
-    private val initScriptButton = JButton()
+    private val statusLabel = JBLabel()
     private val logArea = JBTextArea(8, 40).apply {
         isEditable = false
         lineWrap = true
@@ -46,24 +43,13 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
 
         val topPanel = JPanel().apply {
             layout = BoxLayout(this, BoxLayout.Y_AXIS)
-
-            add(projectStatusLabel)
+            add(statusLabel)
             add(Box.createVerticalStrut(4))
-            val projectButtons = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
+            add(JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
                 add(JButton(msg.message("button.apply.project")).apply { addActionListener { onApply() } })
                 add(Box.createHorizontalStrut(8))
                 add(JButton(msg.message("button.refresh")).apply { addActionListener { refreshStatus() } })
-            }
-            add(projectButtons)
-
-            add(Box.createVerticalStrut(12))
-
-            add(initScriptStatusLabel)
-            add(Box.createVerticalStrut(4))
-            val initButtons = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0)).apply {
-                add(initScriptButton.apply { addActionListener { onToggleInitScript() } })
-            }
-            add(initButtons)
+            })
             add(Box.createVerticalStrut(8))
         }
 
@@ -74,42 +60,15 @@ class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWi
     }
 
     private fun refreshStatus() {
-        projectStatusLabel.text = if (GradleMirrorService.checkApplied(project))
+        statusLabel.text = if (GradleMirrorService.checkApplied(project))
             msg.message("status.project.applied")
         else
             msg.message("status.project.not.applied")
-
-        val initInstalled = GradleInitScriptService.isInstalled()
-        initScriptStatusLabel.text = if (initInstalled)
-            msg.message("status.init.installed")
-        else
-            msg.message("status.init.not.installed")
-        initScriptButton.text = if (initInstalled)
-            msg.message("button.init.remove")
-        else
-            msg.message("button.init.install")
     }
 
     private fun onApply() {
         val result = GradleMirrorService.applyMirrors(project)
         logArea.text = buildLog(result)
-        refreshStatus()
-    }
-
-    private fun onToggleInitScript() {
-        if (GradleInitScriptService.isInstalled()) {
-            val result = GradleInitScriptService.uninstall()
-            logArea.text = if (result.isSuccess)
-                msg.message("log.init.removed")
-            else
-                msg.message("log.init.remove.failed", result.exceptionOrNull()?.message ?: "")
-        } else {
-            val result = GradleInitScriptService.install()
-            logArea.text = if (result.isSuccess)
-                msg.message("log.init.installed", GradleInitScriptService.initFilePath())
-            else
-                msg.message("log.init.install.failed", result.exceptionOrNull()?.message ?: "")
-        }
         refreshStatus()
     }
 
