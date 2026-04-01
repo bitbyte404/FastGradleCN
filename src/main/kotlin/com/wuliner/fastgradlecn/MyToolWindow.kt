@@ -1,0 +1,95 @@
+package com.wuliner.fastgradlecn
+
+import com.intellij.openapi.project.Project
+import com.intellij.openapi.wm.ToolWindow
+import com.intellij.openapi.wm.ToolWindowFactory
+import com.intellij.ui.components.JBLabel
+import com.intellij.ui.components.JBPanel
+import com.intellij.ui.components.JBScrollPane
+import com.intellij.ui.components.JBTextArea
+import com.intellij.ui.content.ContentFactory
+import com.intellij.util.ui.JBUI
+import java.awt.BorderLayout
+import java.awt.FlowLayout
+import javax.swing.Box
+import javax.swing.BoxLayout
+import javax.swing.JButton
+import javax.swing.JPanel
+
+class MyToolWindowFactory : ToolWindowFactory {
+
+    override fun shouldBeAvailable(project: Project) = true
+
+    override fun createToolWindowContent(project: Project, toolWindow: ToolWindow) {
+        val panel = MirrorToolWindowPanel(project)
+        val content = ContentFactory.getInstance().createContent(panel, null, false)
+        toolWindow.contentManager.addContent(content)
+    }
+}
+
+class MirrorToolWindowPanel(private val project: Project) : JBPanel<MirrorToolWindowPanel>(BorderLayout()) {
+
+    private val statusLabel = JBLabel()
+    private val logArea = JBTextArea(8, 40).apply {
+        isEditable = false
+        lineWrap = true
+        wrapStyleWord = true
+        font = font.deriveFont(12f)
+    }
+
+    init {
+        border = JBUI.Borders.empty(10)
+
+        // Top section: status + buttons
+        val topPanel = JPanel().apply {
+            layout = BoxLayout(this, BoxLayout.Y_AXIS)
+
+            add(statusLabel)
+            add(Box.createVerticalStrut(8))
+
+            val buttonPanel = JPanel(FlowLayout(FlowLayout.LEFT, 0, 0))
+            buttonPanel.add(JButton("Apply CN Mirrors").apply {
+                addActionListener { onApply() }
+            })
+            buttonPanel.add(Box.createHorizontalStrut(8))
+            buttonPanel.add(JButton("Refresh Status").apply {
+                addActionListener { refreshStatus() }
+            })
+            add(buttonPanel)
+            add(Box.createVerticalStrut(8))
+        }
+
+        add(topPanel, BorderLayout.NORTH)
+        add(JBScrollPane(logArea), BorderLayout.CENTER)
+
+        refreshStatus()
+    }
+
+    private fun refreshStatus() {
+        val applied = GradleMirrorService.checkApplied(project)
+        if (applied) {
+            statusLabel.text = "Status: ✓ CN mirrors already applied"
+        } else {
+            statusLabel.text = "Status: ✗ CN mirrors not detected"
+        }
+    }
+
+    private fun onApply() {
+        val result = GradleMirrorService.applyMirrors(project)
+        logArea.text = buildLog(result)
+        refreshStatus()
+    }
+
+    private fun buildLog(result: GradleMirrorService.ApplyResult): String {
+        return when {
+            result.error != null -> "Error: ${result.error}"
+            result.noSettingsFile -> "No settings.gradle(.kts) found in project root."
+            result.alreadyApplied -> "CN mirrors already applied. No changes needed."
+            else -> buildList {
+                if (result.settingsModified) add("✓ settings.gradle(.kts): Aliyun mirrors injected")
+                if (result.wrapperModified) add("✓ gradle-wrapper.properties: Tencent mirror + -all distribution")
+                if (isEmpty()) add("No changes needed.")
+            }.joinToString("\n")
+        }
+    }
+}
