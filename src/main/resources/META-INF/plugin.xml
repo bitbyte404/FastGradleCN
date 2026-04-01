@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>com.wuliner.FastGradleCN</id>
     <name>FastGradleCN</name>
-    <vendor url="https://github.com/wuliner">wuliner</vendor>
+    <vendor url="https://github.com/bitbyte404">bitbyte404</vendor>
 
     <description><![CDATA[
         <p>为 Gradle 项目自动配置国内镜像，解决在中国大陆下载依赖缓慢的问题。</p>
