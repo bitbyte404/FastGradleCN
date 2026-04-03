@@ -1,12 +1,22 @@
 <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path d="M32.0845 7.94025V4H24.0203V7.9896H16.029V4H7.91553V7.94025H4V36H16.0044V32.0045C16.0058 30.9457 16.4274 29.9308 17.1766 29.1826C17.9258 28.4345 18.9412 28.0143 20 28.0143C21.0588 28.0143 22.0743 28.4345 22.8234 29.1826C23.5726 29.9308 23.9942 30.9457 23.9956 32.0045V36H36V7.94025H32.0845Z"
-          fill="url(#paint0_linear)"/>
     <defs>
-        <linearGradient id="paint0_linear" x1="2.94192" y1="4.89955" x2="37.7772" y2="39.7345"
-                        gradientUnits="userSpaceOnUse">
-            <stop offset="0.15937" stop-color="#3BEA62"/>
-            <stop offset="0.5404" stop-color="#3C99CC"/>
-            <stop offset="0.93739" stop-color="#6B57FF"/>
+        <linearGradient id="bg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#EF5350"/>
+            <stop offset="1" stop-color="#C62828"/>
+        </linearGradient>
+        <linearGradient id="bolt" x1="30" y1="13" x2="38" y2="27" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#FFE082"/>
+            <stop offset="1" stop-color="#FFB300"/>
         </linearGradient>
     </defs>
+    <!-- Red rounded background -->
+    <rect width="40" height="40" rx="8" fill="url(#bg)"/>
+    <!-- Gradle elephant silhouette (official path, white) -->
+    <g transform="scale(2) translate(2 -24)" fill="white">
+        <path d="M11.939 27.587a2.002 2.002 0 0 0-2.782-.049.196.196 0 0 0-.061.137.2.2 0 0 0 .057.139l.25.258a.19.19 0 0 0 .248.018 1.146 1.146 0 0 1 1.5 1.73c-1.588 1.588-3.71-2.865-8.524-.574a.654.654 0 0 0-.291.917l.825 1.427a.655.655 0 0 0 .885.244l.02-.012-.016.012.366-.206a8.389 8.389 0 0 0 1.152-.86.203.203 0 0 1 .264 0 .187.187 0 0 1 .071.146.193.193 0 0 1-.063.145 8.638 8.638 0 0 1-1.214.901h-.012l-.366.204a1.052 1.052 0 0 1-1.416-.388l-.78-1.348C.555 31.487-.355 33.526.133 36.114a.192.192 0 0 0 .187.155h.89a.19.19 0 0 0 .188-.167 1.302 1.302 0 0 1 2.583 0 .191.191 0 0 0 .19.167h.866a.19.19 0 0 0 .188-.167 1.304 1.304 0 0 1 2.585 0 .19.19 0 0 0 .188.167h.855a.19.19 0 0 0 .19-.187c.02-1.206.346-2.59 1.273-3.285 3.212-2.402 2.367-4.462 1.624-5.21zM8.663 31.22l-.612-.307a.384.384 0 1 1 .612.309v-.002z"/>
+    </g>
+    <!-- Lightning bolt: proper proportions, rounded corners -->
+    <path d="M35 13 L30 21 L33 21 L30 27 L38 17 L35 17 Z"
+          fill="url(#bolt)" stroke="url(#bolt)" stroke-width="2"
+          stroke-linejoin="round" stroke-linecap="round"/>
 </svg>
