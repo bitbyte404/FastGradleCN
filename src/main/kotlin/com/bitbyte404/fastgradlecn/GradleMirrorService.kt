@@ -25,8 +25,19 @@ object GradleMirrorService {
     fun checkApplied(project: Project): Boolean {
         val basePath = project.basePath ?: return false
 
-        val kts = File(basePath, "settings.gradle.kts")
-        val groovy = File(basePath, "settings.gradle")
+        var kts = File(basePath, "settings.gradle.kts")
+        var groovy = File(basePath, "settings.gradle")
+        var wrapper = File(basePath, "gradle/wrapper/gradle-wrapper.properties")
+
+        if (!kts.exists() && !groovy.exists()) {
+            val androidPath = File(basePath, "android")
+            if (androidPath.exists() && androidPath.isDirectory) {
+                kts = File(androidPath, "settings.gradle.kts")
+                groovy = File(androidPath, "settings.gradle")
+                wrapper = File(androidPath, "gradle/wrapper/gradle-wrapper.properties")
+            }
+        }
+
         val settingsFile = when {
             kts.exists() -> kts
             groovy.exists() -> groovy
@@ -37,7 +48,6 @@ object GradleMirrorService {
         val settingsOk = sectionHasAliyun(content, "pluginManagement") &&
                          sectionHasAliyun(content, "dependencyResolutionManagement")
 
-        val wrapper = File(basePath, "gradle/wrapper/gradle-wrapper.properties")
         val wrapperOk = !wrapper.exists() || !wrapper.readText().contains("services.gradle.org")
 
         return settingsOk && wrapperOk
@@ -58,9 +68,18 @@ object GradleMirrorService {
         val details = mutableListOf<String>()
         details += "basePath: $basePath"
 
-        val settingsKts = File(basePath, "settings.gradle.kts")
-        val settingsGroovy = File(basePath, "settings.gradle")
-        val wrapperProps = File(basePath, "gradle/wrapper/gradle-wrapper.properties")
+        var settingsKts = File(basePath, "settings.gradle.kts")
+        var settingsGroovy = File(basePath, "settings.gradle")
+        var wrapperProps = File(basePath, "gradle/wrapper/gradle-wrapper.properties")
+
+        if (!settingsKts.exists() && !settingsGroovy.exists()) {
+            val androidPath = File(basePath, "android")
+            if (androidPath.exists() && androidPath.isDirectory) {
+                settingsKts = File(androidPath, "settings.gradle.kts")
+                settingsGroovy = File(androidPath, "settings.gradle")
+                wrapperProps = File(androidPath, "gradle/wrapper/gradle-wrapper.properties")
+            }
+        }
 
         val (settingsFile, isKts) = when {
             settingsKts.exists() -> settingsKts to true
