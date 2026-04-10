@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.bitbyte404"
-version = "1.0.0"
+version = findProperty("pluginVersion") as String? ?: "1.0.1"
 
 repositories {
     maven { setUrl("https://maven.aliyun.com/repository/public") }
@@ -18,7 +18,12 @@ repositories {
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin.html
 dependencies {
     intellijPlatform {
-        local("/Applications/Android Studio.app")
+        // CI uses a downloadable Android Studio; local dev uses the installed app
+        if (System.getenv("CI") != null) {
+            androidStudio("2023.1.1.28")
+        } else {
+            local("/Applications/Android Studio.app")
+        }
         testFramework(org.jetbrains.intellij.platform.gradle.TestFrameworkType.Platform)
     }
 }
