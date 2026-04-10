@@ -16,12 +16,27 @@ class GradleProjectListener : StartupActivity.DumbAware {
     override fun runActivity(project: Project) {
         ApplicationManager.getApplication().executeOnPooledThread {
             val basePath = project.basePath ?: return@executeOnPooledThread
-            val isGradleProject = File(basePath).listFiles()?.any {
+
+            var gradleRootPath = basePath
+            var isGradleProject = File(basePath).listFiles()?.any {
                 it.name in listOf("settings.gradle.kts", "settings.gradle", "build.gradle.kts", "build.gradle")
             } ?: false
+
+            if (!isGradleProject) {
+                val androidPath = File(basePath, "android")
+                if (androidPath.exists() && androidPath.isDirectory) {
+                    isGradleProject = androidPath.listFiles()?.any {
+                        it.name in listOf("settings.gradle.kts", "settings.gradle", "build.gradle.kts", "build.gradle")
+                    } ?: false
+                    if (isGradleProject) {
+                        gradleRootPath = androidPath.absolutePath
+                    }
+                }
+            }
+
             if (!isGradleProject) return@executeOnPooledThread
 
-            silentlyFixWrapper(basePath)
+            silentlyFixWrapper(gradleRootPath)
 
             if (!GradleMirrorService.checkApplied(project)) {
                 ApplicationManager.getApplication().invokeLater {
