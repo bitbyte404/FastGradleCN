@@ -12,7 +12,7 @@ internal object MyMessageBundle {
 
     @JvmStatic
     @Nls
-    fun message(key: @PropertyKey(resourceBundle = BUNDLE) String, vararg params: Any?): String {
+    fun message(@PropertyKey(resourceBundle = BUNDLE) key: String, vararg params: Any?): String {
         return instance.getMessage(key, *params)
     }
 
