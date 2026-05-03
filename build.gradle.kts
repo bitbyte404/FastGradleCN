@@ -8,7 +8,7 @@ group = "com.bitbyte404"
 version = findProperty("pluginVersion") as String? ?: "1.0.1"
 
 repositories {
-    maven { setUrl("https://maven.aliyun.com/repository/public") }
+    // maven { setUrl("https://maven.aliyun.com/repository/public") }
     mavenCentral()
     intellijPlatform {
         defaultRepositories()
@@ -55,8 +55,8 @@ intellijPlatform {
 tasks {
     // Set the JVM compatibility versions
     withType<JavaCompile> {
-        sourceCompatibility = "21"
-        targetCompatibility = "21"
+        sourceCompatibility = "17"
+        targetCompatibility = "17"
     }
 
     // Disable instrumentation: incompatible with Microsoft JDK (missing Packages dir)
@@ -67,6 +67,6 @@ tasks {
 
 kotlin {
     compilerOptions {
-        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
     }
 }
